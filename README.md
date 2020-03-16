@@ -1,7 +1,7 @@
 
 # WorkFromHome-with-inlets
 
-*"Navigate in any webbrowser to https://desktops.yourcompany.com and logon with your corporate Active Directory account (including 2-FA) to access your Windows desktops"*  
+*"Navigate in any webbrowser to [https://yourcompany.westeurope.cloudapp.azure.com](https://yourcompany.westeurope.cloudapp.azure.com) and logon with your corporate Active Directory account (including 2-FA) to access your Windows desktops"*  
 
 If you want your users to be able to access for example Windows PCs or Windows RDS, which are located on your corporate network from anywhere in the world using any HTML5 capable webbrowser, then this is right for.   
 If your are a homelab enthusiast and want your homelab to be accessible from any where from any device using HTML5, then this maybe worth to have a look.
@@ -67,9 +67,6 @@ sudo -s
 Point your preferred webbrowser to the DNS host name, which you have configured as `FQDN_HOST_NAME` in your .env file. 
 Example: [https://yourcompany.westeurope.cloudapp.azure.com](https://yourcompany.westeurope.cloudapp.azure.com)  
 The default username is `guacadmin` and password is `guacadmin`. 
-
-(If you currently can not access your external `FQDN_HOST_NAME` from internally, you can verify it from internally using http://ubuntu-internal-ip:8081/guacamole   
-Alternatively add a hosts file entry, which points your `FQDN_HOST_NAME` to the internal IP of your Ubuntu Server -> [Beginner-Guide-to-edit-your-hosts-file](https://www.howtogeek.com/howto/27350/beginner-geek-how-to-edit-your-hosts-file/)) 
 
 After entering credentials your prompted to scan the QR-Code, with a compatible TOTP App on your mobile phone.   
 [**Google Authenticator**](https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=en) works good.
