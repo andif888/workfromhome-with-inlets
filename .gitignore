@@ -1,0 +1,9 @@
+ubuntu-xenial-16.04-cloudimg-console.log
+.vagrant/
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+az_client_credentials.json
+terraform.tfvars
+backend.tfvars
+

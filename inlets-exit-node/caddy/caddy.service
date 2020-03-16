@@ -1,0 +1,19 @@
+[Unit]
+Description=Caddy HTTP/2 web server
+Documentation=https://caddyserver.com/docs
+After=network-online.target
+Wants=network-online.target systemd-networkd-wait-online.service
+
+; Do not allow the process to be restarted in a tight loop. If the
+; process fails to start, something critical needs to be fixed.
+StartLimitIntervalSec=14400
+StartLimitBurst=10
+
+[Service]
+Restart=always
+User=root
+ExecStart=/usr/local/bin/caddy run --config /etc/caddy/Caddyfile
+
+
+[Install]
+WantedBy=multi-user.target

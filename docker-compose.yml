@@ -1,0 +1,68 @@
+version: '3'
+
+services:
+
+  inlets:
+    image: inlets/inlets:2.7.0
+    restart: always
+    container_name: inlets-client
+    links:
+      - guacamole:guacamole
+    depends_on:
+      - guacamole
+    command: client --remote wss://${FQDN_HOST_NAME:?err} --upstream=${FQDN_HOST_NAME:?err}=http://guacamole:8080 --token=${INLETS_AUTHTOKEN:?err}
+
+  guacd:
+    image: guacamole/guacd
+    restart: always
+    container_name: guacamole-guacd
+
+  db:
+    image: mysql
+    restart: always
+    container_name: guacamole-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-guacsomethingsecret4444}
+      - MYSQL_USER=${MYSQL_USER:-guacamole}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-guacsomethingsecret8888}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-guacamole}
+    volumes:
+      - ./mysql:/var/lib/mysql
+      - ./mysql_init/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+     
+
+  guacamole:
+    image: guacamole/guacamole
+    container_name: guacamole-app
+    restart: always
+    ports:
+      - 8081:8080
+    links:
+      - guacd:guacd
+      - db:mysql
+    depends_on:
+      - db
+      - guacd
+    volumes:
+      - "./guac_conf/server.xml:/usr/local/tomcat/conf/server.xml"
+      - "./guac_home:/guac_home"
+    environment:
+      - GUACAMOLE_HOME=/guac_home
+      - MYSQL_HOSTNAME=mysql
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-guacamole}
+      - MYSQL_USER=${MYSQL_USER:-guacamole}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-guacsomethingsecret8888}
+      - GUACD_HOSTNAME=guacd
+      - GUACD_PORT=4822
+      - LDAP_HOSTNAME=${LDAP_HOSTNAME}
+      - LDAP_PORT=${LDAP_PORT:-389}
+      - LDAP_ENCRYPTION_METHOD=${LDAP_ENCRYPTION_METHOD:-none}
+      - LDAP_USER_BASE_DN=${LDAP_USER_BASE_DN}
+      - LDAP_GROUP_BASE_DN=${LDAP_GROUP_BASE_DN}
+      - LDAP_SEARCH_BIND_DN=${LDAP_SEARCH_BIND_DN}
+      - LDAP_SEARCH_BIND_PASSWORD=${LDAP_SEARCH_BIND_PASSWORD}
+      - LDAP_USERNAME_ATTRIBUTE=${LDAP_USERNAME_ATTRIBUTE:-userPrincipalName}
+      - LDAP_GROUP_NAME_ATTRIBUTE=${LDAP_GROUP_NAME_ATTRIBUTE:-cn}
+      - LDAP_MEMBER_ATTRIBUTE=${LDAP_MEMBER_ATTRIBUTE:-member}
+      - LDAP_USER_SEARCH_FILTER=${LDAP_USER_SEARCH_FILTER:-(&(objectCategory=person)(objectclass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))}
+      - TOTP_ISSUER=${FQDN_HOST_NAME:?err}
