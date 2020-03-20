@@ -11,6 +11,8 @@ read -p 'Admin Password: ' TF_VAR_admin_password
 echo ""
 echo ""
 
+# Gernerat Azure resource group name
+TF_VAR_resourcegroup=$TF_VAR_vm_hostname-rg
 
 # Generate random Inlets Server Authentication Token into environment variable
 TF_VAR_inlets_authtoken=$(head -c 16 /dev/urandom | shasum | cut -d" " -f1)
@@ -39,5 +41,6 @@ echo "vm_hostname       = \"$TF_VAR_vm_hostname\"" >> terraform.tfvars
 echo "admin_username    = \"$TF_VAR_admin_username\"" >> terraform.tfvars
 echo "admin_password    = \"$TF_VAR_admin_password\"" >> terraform.tfvars
 echo "inlets_authtoken  = \"$TF_VAR_inlets_authtoken\"" >> terraform.tfvars
+echo "resourcegroup     = \"$TF_VAR_resourcegroup\"" >> terraform.tfvars
 
 cat terraform.tfvars
