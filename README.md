@@ -26,7 +26,9 @@ If you are not afraid of Linux, Docker and a bunch of Opensource Tools, then you
 Ideally you have a vanilla or an existing Ubuntu server on your corporate network.   
 The repo contains a [Vagrantfile](Vagrantfile), so you also can easily use `vagrant up` to test the solution in a local VM using [Virtualbox](https://www.virtualbox.org/) and [Vagrant](https://www.vagrantup.com/downloads.html). 
 
-To spin up the Gacamole inlets exit-node in Azure you need a Azure Subcription. 
+To spin up the Gacamole inlets exit-node in Azure you need a Azure Subcription.   
+   
+**Pro-Tip**: Maybe you have spotted the [Vagrantfile](Vagrantfile). This means, for testing purpose you can use `vagrant up` to spin up an Ubuntu Linux immediately, if you are a little bit familiar with [Vagrant](https://www.vagrantup.com/downloads.html) and [VirtualBox](https://www.virtualbox.org/wiki/Downloads) and have already installed it somewhere. If you do so then you can already skip `Step 1`, because Vagrant has done it already for you. 
 
 
 ### Step 1:
@@ -125,7 +127,7 @@ General Help on [How to configure connections in Guacamole](https://guacamole.ap
 ## Using Active Directory Authentication and enable 2-FA 
 
 Make sure you have entered correct mandatory values regarding LDAP authentication into the [.env](.env) file in **Step 2** during initial configuration.   
-NOTE: We don't use the AD Schema preparation documented at https://guacamole.apache.org/doc/gug/ldap-auth.html, because we don't like to edit changes in our AD Schema. 
+NOTE: We don't use the AD Schema preparation, documented at https://guacamole.apache.org/doc/gug/ldap-auth.html, because we don't like to do changes in our Acitive Directory Schema. 
 Please read the documention to understand the mapping between database users und AD users.
 
 ### Step 1: Create an initial admin user in Guacamole which maps to an AD user 
