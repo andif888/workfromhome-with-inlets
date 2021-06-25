@@ -4,6 +4,7 @@ services:
 
   inlets:
     image: inlets/inlets:3.0.2
+    build: https://github.com/inlets/inlets.git#3.0.2
     restart: always
     container_name: inlets-client
     links:
