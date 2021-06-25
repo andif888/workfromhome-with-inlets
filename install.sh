@@ -34,14 +34,14 @@ apt-get update
 apt-get -y install docker-ce docker-ce-cli containerd.io 
 
 # install docker-compose
-curl -SLo /usr/local/bin/docker-compose "https://github.com/docker/compose/releases/download/1.25.4/docker-compose-Linux-x86_64"
+curl -SLo /usr/local/bin/docker-compose "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64"
 chown root:root /usr/local/bin/docker-compose
 chmod 0755 /usr/local/bin/docker-compose
 
 # Install terraform
-curl -SLo terraform_0.12.23_linux_amd64.zip "https://releases.hashicorp.com/terraform/0.12.23/terraform_0.12.23_linux_amd64.zip"
-unzip terraform_0.12.23_linux_amd64.zip
-rm -f terraform_0.12.23_linux_amd64.zip
+curl -SLo terraform_1.0.0_linux_amd64.zip "https://releases.hashicorp.com/terraform/1.0.0/terraform_1.0.0_linux_amd64.zip"
+unzip terraform_1.0.0_linux_amd64.zip
+rm -f terraform_1.0.0_linux_amd64.zip
 mv ./terraform /usr/local/bin/terraform
 
 # Install Azure CLI

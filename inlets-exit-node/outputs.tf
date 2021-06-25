@@ -4,7 +4,7 @@ output "inlets_authtoken" {
 }
 output "inlets_client_commandline" {
     description = "Use this command to run inlets client"
-    value = "inlets client --remote wss://${azurerm_public_ip.vm.fqdn} --upstream=${azurerm_public_ip.vm.fqdn}=http://127.0.0.1:8081 --token=${var.inlets_authtoken}"
+    value = "inlets client --url wss://${azurerm_public_ip.vm.fqdn} --upstream=${azurerm_public_ip.vm.fqdn}=http://127.0.0.1:8081 --token=${var.inlets_authtoken}"
 }
 output "vm_admin_username" {
     description = "Admin username to logon to the VM"

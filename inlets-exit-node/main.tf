@@ -1,7 +1,6 @@
 provider "azurerm" {
-  # The "feature" block is required for AzureRM provider 2.x. 
+  # The "feature" block is required for AzureRM provider 2.x.
   # If you are using version 1.x, the "features" block is not allowed.
-  version = "~>2.0"
 
   subscription_id = var.subscription_id
   client_id       = var.client_id
@@ -24,15 +23,103 @@ resource "azurerm_virtual_network" "vm" {
   location            = azurerm_resource_group.vm.location
   resource_group_name = azurerm_resource_group.vm.name
   tags                = var.tags
+  depends_on = [azurerm_resource_group.vm]
 }
 
 resource "azurerm_subnet" "internal" {
   name                 = "internal"
   resource_group_name  = azurerm_resource_group.vm.name
   virtual_network_name = azurerm_virtual_network.vm.name
-  address_prefix       = "192.168.98.0/24"
+  address_prefixes       = ["192.168.98.0/24"]
+  depends_on = [azurerm_resource_group.vm, azurerm_virtual_network.vm]
 }
 
+resource "azurerm_public_ip" "vm" {
+  name                         = "${var.vm_hostname}-ip"
+  location                     = var.location
+  resource_group_name          = azurerm_resource_group.vm.name
+  allocation_method            = "Static"
+  domain_name_label            = var.vm_hostname
+  tags = var.tags
+  depends_on = [azurerm_resource_group.vm]
+}
+
+resource "azurerm_network_security_group" "vm" {
+  name                = "${var.vm_hostname}-nsg"
+  resource_group_name = azurerm_resource_group.vm.name
+  location            = var.location
+  tags = var.tags
+  depends_on = [azurerm_resource_group.vm]
+}
+
+resource "azurerm_network_security_rule" "allow_port_22" {
+  name                        = "allow_remote_22_in_all"
+  resource_group_name         = azurerm_resource_group.vm.name
+  description                 = "Allow remote protocol in from all locations"
+  priority                    = 101
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "tcp"
+  source_port_range           = "*"
+  source_address_prefixes     = ["0.0.0.0/0"]
+  destination_port_range      = "22"
+  destination_address_prefix  = "*"
+  network_security_group_name = azurerm_network_security_group.vm.name
+  depends_on = [azurerm_resource_group.vm, azurerm_network_security_group.vm]
+}
+
+resource "azurerm_network_security_rule" "allow_port_80" {
+  name                        = "allow_remote_80_in_all"
+  resource_group_name         = azurerm_resource_group.vm.name
+  description                 = "Allow remote protocol in from all locations"
+  priority                    = 102
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "tcp"
+  source_port_range           = "*"
+  source_address_prefixes     = ["0.0.0.0/0"]
+  destination_port_range      = "80"
+  destination_address_prefix  = "*"
+  network_security_group_name = azurerm_network_security_group.vm.name
+  depends_on = [azurerm_resource_group.vm, azurerm_network_security_group.vm]
+}
+
+resource "azurerm_network_security_rule" "allow_port_443" {
+  name                        = "allow_remote_443_in_all"
+  resource_group_name         = azurerm_resource_group.vm.name
+  description                 = "Allow remote protocol in from all locations"
+  priority                    = 103
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "tcp"
+  source_port_range           = "*"
+  source_address_prefixes     = ["0.0.0.0/0"]
+  destination_port_range      = "443"
+  destination_address_prefix  = "*"
+  network_security_group_name = azurerm_network_security_group.vm.name
+  depends_on = [azurerm_resource_group.vm, azurerm_network_security_group.vm]
+}
+
+resource "azurerm_network_interface" "vm" {
+  name                      = "${var.vm_hostname}-nic"
+  location                  = azurerm_resource_group.vm.location
+  resource_group_name       = azurerm_resource_group.vm.name
+
+  ip_configuration {
+    name                          = "ipconfig"
+    subnet_id                     = azurerm_subnet.internal.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.vm.id
+  }
+  tags = var.tags
+  depends_on = [azurerm_resource_group.vm, azurerm_public_ip.vm]
+}
+
+resource "azurerm_network_interface_security_group_association" "vm" {
+  network_interface_id      = azurerm_network_interface.vm.id
+  network_security_group_id = azurerm_network_security_group.vm.id
+  depends_on = [azurerm_network_interface.vm, azurerm_network_security_group.vm]
+}
 
 
 resource "azurerm_virtual_machine" "vm-linux" {
@@ -45,8 +132,8 @@ resource "azurerm_virtual_machine" "vm-linux" {
 
   storage_image_reference {
     publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
+    offer     = "0001-com-ubuntu-server-focal"
+    sku       = "20_04-lts"
     version   = "latest"
   }
 
@@ -85,9 +172,9 @@ resource "azurerm_virtual_machine" "vm-linux" {
       "curl -sLS https://get.inlets.dev | sudo sh",
 
       "echo Installing Inlets systemd service",
-      "curl -sLO https://raw.githubusercontent.com/alexellis/inlets/master/hack/inlets.service",
-      "sed -i s/80/8080/g inlets.service",
-      "sudo mv inlets.service /etc/systemd/system/inlets.service",      
+      "curl -sLO https://raw.githubusercontent.com/inlets/inlets/master/hack/inlets.service",
+      "sed -i s/=80/=8080/g inlets.service",
+      "sudo mv inlets.service /etc/systemd/system/inlets.service",
 
       "echo Configuring Inlets AUTHTOKEN",
       "echo 'AUTHTOKEN=${var.inlets_authtoken}' > inlets",
@@ -99,8 +186,9 @@ resource "azurerm_virtual_machine" "vm-linux" {
       "sudo systemctl enable inlets.service",
 
       "echo Installing Caddy",
-      "curl -OL https://github.com/caddyserver/caddy/releases/download/v2.0.0-beta.17/caddy2_beta17_linux_amd64",
-      "sudo mv caddy2_beta17_linux_amd64 /usr/local/bin/caddy",
+      "curl -OL https://github.com/caddyserver/caddy/releases/download/v2.4.3/caddy_2.4.3_linux_amd64.tar.gz",
+      "tar -zxvf caddy_2.4.3_linux_amd64.tar.gz",
+      "sudo mv caddy /usr/local/bin/caddy",
       "sudo chown root:root /usr/local/bin/caddy",
       "sudo chmod 0755 /usr/local/bin/caddy",
 
@@ -118,37 +206,12 @@ resource "azurerm_virtual_machine" "vm-linux" {
       "sudo systemctl daemon-reload",
       "sudo systemctl start caddy.service",
       "sudo systemctl enable caddy.service",
-      "sleep 30",
+      "sleep 45",
       "sudo systemctl stop caddy.service",
-      "sleep 3",
+      "sleep 5",
       "sudo systemctl start caddy.service",
     ]
   }
-
   tags = var.tags
-
-  
-}
-
-
-resource "azurerm_public_ip" "vm" {
-  name                         = "${var.vm_hostname}-ip"
-  location                     = var.location
-  resource_group_name          = azurerm_resource_group.vm.name
-  allocation_method            = "Static"
-  domain_name_label            = var.vm_hostname
-}
-
-resource "azurerm_network_interface" "vm" {
-  name                      = "${var.vm_hostname}-nic"
-  location                  = azurerm_resource_group.vm.location
-  resource_group_name       = azurerm_resource_group.vm.name
-  
-
-  ip_configuration {
-    name                          = "ipconfig"
-    subnet_id                     = azurerm_subnet.internal.id
-    private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.vm.id
-  }
+  depends_on = [azurerm_resource_group.vm, azurerm_public_ip.vm, azurerm_network_interface.vm]
 }

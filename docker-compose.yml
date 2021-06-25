@@ -3,14 +3,14 @@ version: '3'
 services:
 
   inlets:
-    image: inlets/inlets:2.7.0
+    image: inlets/inlets:3.0.2
     restart: always
     container_name: inlets-client
     links:
       - guacamole:guacamole
     depends_on:
       - guacamole
-    command: client --remote wss://${FQDN_HOST_NAME:?err} --upstream=${FQDN_HOST_NAME:?err}=http://guacamole:8080 --token=${INLETS_AUTHTOKEN:?err}
+    command: client --url wss://${FQDN_HOST_NAME:?err} --upstream=${FQDN_HOST_NAME:?err}=http://guacamole:8080 --token=${INLETS_AUTHTOKEN:?err}
 
   guacd:
     image: guacamole/guacd
@@ -29,7 +29,7 @@ services:
     volumes:
       - ./mysql:/var/lib/mysql
       - ./mysql_init/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
-     
+
 
   guacamole:
     image: guacamole/guacamole
